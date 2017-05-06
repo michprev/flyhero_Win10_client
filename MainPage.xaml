@@ -7,7 +7,29 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d">
 
-    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Pivot Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <PivotItem Header="Control">
+            <StackPanel Margin="20,0,20,0" Orientation="Vertical">
+                <TextBlock Margin="0,0,0,20" Text="Roll Kp"/>
+                <Slider x:Name="rollKp" ValueChanged="rollKp_ValueChanged" Margin="0,0,0,20" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+                <TextBlock Margin="0,0,0,20" Text="Pitch Kp"/>
+                <Slider x:Name="pitchKp" ValueChanged="pitchKp_ValueChanged" Margin="0,0,0,20" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+                <TextBlock Margin="0,0,0,20" Text="Yaw Kp"/>
+                <Slider x:Name="yawKp" ValueChanged="yawKp_ValueChanged" Margin="0,0,0,20" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
 
-    </Grid>
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock VerticalAlignment="Center" Text="Invert Yaw"/>
+                    <ToggleSwitch Margin="30,0,0,0" VerticalAlignment="Center" Toggled="invert_yaw_Toggled" />
+                </StackPanel>
+
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button Margin="0,0,30,20" x:Name="calibrateButton" Click="calibrate_Click" HorizontalAlignment="Center" Width="100" Height="40" Content="Calibrate"/>
+                    <Button Margin="30,0,0,20" x:Name="startButton" IsEnabled="False" Content="Start" HorizontalAlignment="Left" Height="40" Width="100" Click="start_Click"/>
+                </StackPanel>
+
+                <TextBlock x:Name="PWM_Text" Text="Motors"/>
+                <Slider Maximum="1000" Minimum="0" Value="0" x:Name="PWM_Slider" ValueChanged="PWM_Slider_ValueChanged" Margin="0,0,0,20"/>
+            </StackPanel>
+        </PivotItem>
+    </Pivot>
 </Page>
