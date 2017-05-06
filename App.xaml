@@ -1,0 +1,8 @@
+﻿<Application
+    x:Class="flyhero_client.App"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:flyhero_client"
+    RequestedTheme="Light">
+
+</Application>
