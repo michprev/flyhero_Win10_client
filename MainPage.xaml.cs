@@ -80,7 +80,7 @@ namespace flyhero_client
                 {
                     using (var fileWriter = new DataWriter(outputStream))
                     {
-                        fileWriter.WriteString("Roll;Pitch;Yaw;Throttle;Time\r\n");
+                        fileWriter.WriteString("Roll;Pitch;Yaw;Throttle;FL;BL;FR;BR;Time\r\n");
 
                         MeasurementData d;
                         int c = 0;
@@ -89,7 +89,7 @@ namespace flyhero_client
                         {
                             if (this.queue.Count > 0 && this.queue.TryDequeue(out d))
                             {
-                                fileWriter.WriteString(String.Format("{0};{1};{2};{3};{4}\r\n", d.Roll, d.Pitch, d.Yaw, d.Throttle, c * 5).Replace('.', ','));
+                                fileWriter.WriteString(String.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}\r\n", d.Roll, d.Pitch, d.Yaw, d.Throttle, d.FL, d.BL, d.FR, d.BR, c * 5).Replace('.', ','));
                                 c++;
 
                                 if (c % 100 == 0)
@@ -113,6 +113,8 @@ namespace flyhero_client
 
             double roll, pitch, yaw;
             int throttle;
+            int FL, BL, FR, BR;
+            double rollCorrection, pitchCorrection, yawCorrection;
 
             roll = dr.ReadInt32() / 65536.0;
             pitch = dr.ReadInt32() / 65536.0;
@@ -122,7 +124,26 @@ namespace flyhero_client
             if (throttle != 0)
                 throttle -= 1000;
 
-            this.queue.Enqueue(new MeasurementData() { Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle });
+            rollCorrection = roll * this.RollKp / 100.0;
+            pitchCorrection = pitch * this.PitchKp / 100.0;
+            yawCorrection = yaw * this.YawKp / 100.0;
+
+            if (!this.yawInvert)
+            {
+                FL = (int)(throttle + rollCorrection + pitchCorrection + yawCorrection);
+                BL = (int)(throttle + rollCorrection - pitchCorrection - yawCorrection);
+                FR = (int)(throttle - rollCorrection + pitchCorrection - yawCorrection);
+                BR = (int)(throttle - rollCorrection - pitchCorrection + yawCorrection);
+            }
+            else
+            {
+                FL = (int)(throttle + rollCorrection + pitchCorrection - yawCorrection);
+                BL = (int)(throttle + rollCorrection - pitchCorrection + yawCorrection);
+                FR = (int)(throttle - rollCorrection + pitchCorrection + yawCorrection);
+                BR = (int)(throttle - rollCorrection - pitchCorrection - yawCorrection);
+            }
+
+            this.queue.Enqueue(new MeasurementData() { Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle, FL = FL, BL = BL, FR = FR, BR = BR });
         }
 
         private void rollKp_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
