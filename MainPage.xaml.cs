@@ -13,6 +13,7 @@ using Windows.Storage;
 using Windows.Storage.Streams;
 using Windows.System.Display;
 using Windows.System.Threading;
+using Windows.UI.Popups;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -98,6 +99,10 @@ namespace flyhero_client
                     }
                 }
                 stream.Dispose();
+            }).ContinueWith(async (t) =>
+            {
+                MessageDialog dialog = new MessageDialog(t.Exception.Message);
+                await dialog.ShowAsync();
             });
         }
 
