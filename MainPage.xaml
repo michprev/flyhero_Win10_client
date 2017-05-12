@@ -8,23 +8,61 @@
     mc:Ignorable="d">
 
     <Pivot Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <PivotItem Header="Start">
+            <StackPanel Margin="20,40,20,0" Orientation="Vertical">
+                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                    <Button Margin="0,0,30,20" x:Name="calibrateButton" Click="calibrate_Click" HorizontalAlignment="Center" Width="100" Height="40" Content="Calibrate"/>
+                    <Button Margin="30,0,0,20" x:Name="startButton" IsEnabled="False" Content="Start" HorizontalAlignment="Left" Height="40" Width="100" Click="start_Click"/>
+                </StackPanel>
+            </StackPanel>
+        </PivotItem>
         <PivotItem Header="Control">
-            <StackPanel Margin="20,0,20,0" Orientation="Vertical">
-                <TextBlock Margin="0,0,0,20" Text="Roll Kp"/>
-                <Slider x:Name="rollKp" ValueChanged="rollKp_ValueChanged" Margin="0,0,0,20" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
-                <TextBlock Margin="0,0,0,20" Text="Pitch Kp"/>
-                <Slider x:Name="pitchKp" ValueChanged="pitchKp_ValueChanged" Margin="0,0,0,20" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
-                <TextBlock Margin="0,0,0,20" Text="Yaw Kp"/>
-                <Slider x:Name="yawKp" ValueChanged="yawKp_ValueChanged" Margin="0,0,0,20" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+            <StackPanel Margin="0,0,0,0" Orientation="Vertical">
+                <Grid>
+                    <TextBlock VerticalAlignment="Center" Text="Roll">
+                        <TextBlock.RenderTransform>
+                            <RotateTransform Angle="-90"/>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+
+                    <StackPanel Margin="25,0,0,0" Orientation="Vertical">
+                        <Slider x:Name="rollKp" ValueChanged="rollKp_ValueChanged" Minimum="0" Maximum="10" Value="0.7" StepFrequency="0.01"/>
+                        <Slider x:Name="rollKi" ValueChanged="rollKi_ValueChanged" Minimum="0" Maximum="10" Value="1" StepFrequency="0.01"/>
+                        <Slider x:Name="rollkD" ValueChanged="rollkD_ValueChanged" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+                    </StackPanel>
+                </Grid>
+
+                <Grid>
+                    <TextBlock VerticalAlignment="Center" Text="Pitch">
+                        <TextBlock.RenderTransform>
+                            <RotateTransform Angle="-90"/>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+
+                    <StackPanel Margin="25,0,0,0" Orientation="Vertical">
+                        <Slider x:Name="pitchKp" ValueChanged="pitchKp_ValueChanged" Minimum="0" Maximum="10" Value="0.7" StepFrequency="0.01"/>
+                        <Slider x:Name="pitchKi" ValueChanged="pitchKi_ValueChanged" Minimum="0" Maximum="10" Value="1" StepFrequency="0.01"/>
+                        <Slider x:Name="pitchKd" ValueChanged="pitchKd_ValueChanged" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+                    </StackPanel>
+                </Grid>
+
+                <Grid>
+                    <TextBlock VerticalAlignment="Center" Text="Yaw">
+                        <TextBlock.RenderTransform>
+                            <RotateTransform Angle="-90"/>
+                        </TextBlock.RenderTransform>
+                    </TextBlock>
+
+                    <StackPanel Margin="25,0,0,0" Orientation="Vertical">
+                        <Slider x:Name="yawKp" ValueChanged="yawKp_ValueChanged" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+                        <Slider x:Name="yawKi" ValueChanged="yawKi_ValueChanged" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+                        <Slider x:Name="yawKd" ValueChanged="yawKd_ValueChanged" Minimum="0" Maximum="10" Value="0" StepFrequency="0.01"/>
+                    </StackPanel>
+                </Grid>
 
                 <StackPanel Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Invert Yaw"/>
                     <ToggleSwitch Margin="30,0,0,0" VerticalAlignment="Center" Toggled="invert_yaw_Toggled" />
-                </StackPanel>
-
-                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
-                    <Button Margin="0,0,30,20" x:Name="calibrateButton" Click="calibrate_Click" HorizontalAlignment="Center" Width="100" Height="40" Content="Calibrate"/>
-                    <Button Margin="30,0,0,20" x:Name="startButton" IsEnabled="False" Content="Start" HorizontalAlignment="Left" Height="40" Width="100" Click="start_Click"/>
                 </StackPanel>
 
                 <TextBlock x:Name="PWM_Text" Text="Motors"/>

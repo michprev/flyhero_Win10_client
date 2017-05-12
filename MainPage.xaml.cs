@@ -32,9 +32,15 @@ namespace flyhero_client
     public sealed partial class MainPage : Page
     {
         private int throttle = 0;
-        private int RollKp = 0;
-        private int PitchKp = 0;
+        private int RollKp = 70;
+        private int RollKi = 100;
+        private int RollKd = 0;
+        private int PitchKp = 70;
+        private int PitchKi = 100;
+        private int PitchKd = 0;
         private int YawKp = 0;
+        private int YawKi = 0;
+        private int YawKd = 0;
         private bool yawInvert = false;
         private DisplayRequest displayRequest;
         private DatagramSocket socket;
@@ -151,14 +157,44 @@ namespace flyhero_client
             this.RollKp = (int)Math.Round(e.NewValue * 100);
         }
 
+        private void rollKi_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            this.RollKi = (int)Math.Round(e.NewValue * 100);
+        }
+
+        private void rollkD_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            this.RollKd = (int)Math.Round(e.NewValue * 100);
+        }
+
         private void pitchKp_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             this.PitchKp = (int)Math.Round(e.NewValue * 100);
         }
 
+        private void pitchKi_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            this.PitchKi = (int)Math.Round(e.NewValue * 100);
+        }
+
+        private void pitchKd_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            this.PitchKd = (int)Math.Round(e.NewValue * 100);
+        }
+
         private void yawKp_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
         {
             this.YawKp = (int)Math.Round(e.NewValue * 100);
+        }
+
+        private void yawKi_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            this.YawKi = (int)Math.Round(e.NewValue * 100);
+        }
+
+        private void yawKd_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
+        {
+            this.YawKd = (int)Math.Round(e.NewValue * 100);
         }
 
         private void PWM_Slider_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -173,15 +209,10 @@ namespace flyhero_client
 
         private async void calibrate_Click(object sender, RoutedEventArgs e)
         {
-            byte[] message = new byte[8];
+            byte[] message = new byte[3];
             message[0] = 0x5D;
-            message[1] = (byte)((this.RollKp >> 8) & 0xFF);
-            message[2] = (byte)(this.RollKp & 0xFF);
-            message[3] = (byte)((this.PitchKp >> 8) & 0xFF);
-            message[4] = (byte)(this.PitchKp & 0xFF);
-            message[5] = (byte)((this.YawKp >> 8) & 0xFF);
-            message[6] = (byte)(this.YawKp & 0xFF);
-            message[7] = 0x5D;
+            message[1] = 0x7;
+            message[2] = 0x5D;
 
             try
             {
@@ -219,17 +250,33 @@ namespace flyhero_client
 
         private async void timerHandler(ThreadPoolTimer timer)
         {
-            byte[] message = new byte[10];
+            byte[] message = new byte[22];
             message[0] = 0x5D;
             message[1] = (byte)((this.throttle >> 8) & 0xFF);
             message[2] = (byte)(this.throttle & 0xFF);
+
             message[3] = (byte)((this.RollKp >> 8) & 0xFF);
             message[4] = (byte)(this.RollKp & 0xFF);
-            message[5] = (byte)((this.PitchKp >> 8) & 0xFF);
-            message[6] = (byte)(this.PitchKp & 0xFF);
-            message[7] = (byte)((this.YawKp >> 8) & 0xFF);
-            message[8] = (byte)(this.YawKp & 0xFF);
-            message[9] = (byte)(this.yawInvert ? 0x01 : 0x00);
+            message[5] = (byte)((this.RollKi >> 8) & 0xFF);
+            message[6] = (byte)(this.RollKi & 0xFF);
+            message[7] = (byte)((this.RollKd >> 8) & 0xFF);
+            message[8] = (byte)(this.RollKd & 0xFF);
+
+            message[9] = (byte)((this.PitchKp >> 8) & 0xFF);
+            message[10] = (byte)(this.PitchKp & 0xFF);
+            message[11] = (byte)((this.PitchKi >> 8) & 0xFF);
+            message[12] = (byte)(this.PitchKi & 0xFF);
+            message[13] = (byte)((this.PitchKd >> 8) & 0xFF);
+            message[14] = (byte)(this.PitchKd & 0xFF);
+
+            message[15] = (byte)((this.YawKp >> 8) & 0xFF);
+            message[16] = (byte)(this.YawKp & 0xFF);
+            message[17] = (byte)((this.YawKi >> 8) & 0xFF);
+            message[18] = (byte)(this.YawKi & 0xFF);
+            message[19] = (byte)((this.YawKd >> 8) & 0xFF);
+            message[20] = (byte)(this.YawKd & 0xFF);
+
+            message[21] = (byte)(this.yawInvert ? 0x01 : 0x00);
 
             try
             {
