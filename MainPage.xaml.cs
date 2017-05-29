@@ -42,6 +42,7 @@ namespace flyhero_client
         private int YawKi = 0;
         private int YawKd = 0;
         private bool yawInvert = false;
+        private bool logData = false;
         private DisplayRequest displayRequest;
         private DatagramSocket socket;
         private DataWriter dw;
@@ -74,42 +75,6 @@ namespace flyhero_client
                 this.dw = new DataWriter(this.socket.OutputStream);
 
             //}
-
-            DateTime now = DateTime.Now;
-            StorageFile file = await DownloadsFolder.CreateFileAsync(String.Format("log-{0}-{1}-{2}_{3}-{4}-{5}.csv", now.Day, now.Month, now.Year, now.Hour, now.Minute, now.Second));
-
-            Task.Run(async () =>
-            {
-                var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
-
-                using (var outputStream = stream.GetOutputStreamAt(0))
-                {
-                    using (var fileWriter = new DataWriter(outputStream))
-                    {
-                        fileWriter.WriteString("Roll;Pitch;Yaw;Throttle;FL;BL;FR;BR;Time\r\n");
-
-                        MeasurementData d;
-                        int c = 0;
-
-                        while (true)
-                        {
-                            if (this.queue.Count > 0 && this.queue.TryDequeue(out d))
-                            {
-                                fileWriter.WriteString(String.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}\r\n", d.Roll, d.Pitch, d.Yaw, d.Throttle, d.FL, d.BL, d.FR, d.BR, c * 5).Replace('.', ','));
-                                c++;
-
-                                if (c % 100 == 0)
-                                    await fileWriter.StoreAsync();
-                            }
-                        }
-                    }
-                }
-                stream.Dispose();
-            }).ContinueWith(async (t) =>
-            {
-                MessageDialog dialog = new MessageDialog(t.Exception.Message);
-                await dialog.ShowAsync();
-            });
         }
 
         private void Socket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
@@ -211,7 +176,7 @@ namespace flyhero_client
         {
             byte[] message = new byte[3];
             message[0] = 0x5D;
-            message[1] = 0x7;
+            message[1] = (byte)(this.logData ? 0x01 : 0x00);
             message[2] = 0x5D;
 
             try
@@ -219,11 +184,51 @@ namespace flyhero_client
                 dw.WriteBytes(message);
                 await dw.StoreAsync();
                 this.calibrateButton.IsEnabled = false;
+                this.logSwitch.IsEnabled = false;
                 this.startButton.IsEnabled = true;
             }
             catch (Exception ex)
             {
 
+            }
+
+            DateTime now = DateTime.Now;
+            StorageFile file = await DownloadsFolder.CreateFileAsync(String.Format("log-{0}-{1}-{2}_{3}-{4}-{5}.csv", now.Day, now.Month, now.Year, now.Hour, now.Minute, now.Second));
+
+            if (this.logData)
+            {
+                Task.Run(async () =>
+                {
+                    var stream = await file.OpenAsync(FileAccessMode.ReadWrite);
+
+                    using (var outputStream = stream.GetOutputStreamAt(0))
+                    {
+                        using (var fileWriter = new DataWriter(outputStream))
+                        {
+                            fileWriter.WriteString("Roll;Pitch;Yaw;Throttle;FL;BL;FR;BR;Time\r\n");
+
+                            MeasurementData d;
+                            int c = 0;
+
+                            while (true)
+                            {
+                                if (this.queue.Count > 0 && this.queue.TryDequeue(out d))
+                                {
+                                    fileWriter.WriteString(String.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}\r\n", d.Roll, d.Pitch, d.Yaw, d.Throttle, d.FL, d.BL, d.FR, d.BR, c * 5).Replace('.', ','));
+                                    c++;
+
+                                    if (c % 100 == 0)
+                                        await fileWriter.StoreAsync();
+                                }
+                            }
+                        }
+                    }
+                    stream.Dispose();
+                }).ContinueWith(async (t) =>
+                {
+                    MessageDialog dialog = new MessageDialog(t.Exception.Message);
+                    await dialog.ShowAsync();
+                });
             }
         }
 
@@ -287,6 +292,11 @@ namespace flyhero_client
             {
 
             }
+        }
+
+        private void log_data_Toggled(object sender, RoutedEventArgs e)
+        {
+            this.logData = !this.logData;
         }
     }
 }
