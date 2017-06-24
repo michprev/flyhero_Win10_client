@@ -214,7 +214,7 @@ namespace flyhero_client
                             {
                                 if (this.queue.Count > 0 && this.queue.TryDequeue(out d))
                                 {
-                                    fileWriter.WriteString(String.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}\r\n", d.Roll, d.Pitch, d.Yaw, d.Throttle, d.FL, d.BL, d.FR, d.BR, c * 5).Replace('.', ','));
+                                    fileWriter.WriteString(String.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}\r\n", d.Roll, d.Pitch, d.Yaw, d.Throttle, d.FL, d.BL, d.FR, d.BR, c * 5).Replace(',', '.'));
                                     c++;
 
                                     if (c % 100 == 0)
