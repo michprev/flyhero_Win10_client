@@ -18,6 +18,22 @@
                     <TextBlock VerticalAlignment="Center" Text="Log data"/>
                     <ToggleSwitch x:Name="logSwitch" Margin="20,0,0,0" Toggled="log_data_Toggled"/>
                 </StackPanel>
+
+                <ScrollViewer x:Name="logOptionsViewer" IsEnabled="{x:Bind logSwitch.IsOn, Mode=OneWay}">
+                    <StackPanel Orientation="Vertical">
+                        <CheckBox x:Name="accelXToggle" IsChecked="True" Content="Accel X"/>
+                        <CheckBox x:Name="accelYToggle" IsChecked="True" Content="Accel Y"/>
+                        <CheckBox x:Name="accelZToggle" IsChecked="True" Content="Accel Z"/>
+                        <CheckBox x:Name="gyroXToggle" IsChecked="True" Content="Gyro X"/>
+                        <CheckBox x:Name="gyroYToggle" IsChecked="True" Content="Gyro Y"/>
+                        <CheckBox x:Name="gyroZToggle" IsChecked="True" Content="Gyro Z"/>
+                        <CheckBox x:Name="tempToggle" IsChecked="True" Content="Temperature"/>
+                        <CheckBox x:Name="rollToggle" IsChecked="True" Content="Roll"/>
+                        <CheckBox x:Name="pitchToggle" IsChecked="True" Content="Pitch"/>
+                        <CheckBox x:Name="yawToggle" IsChecked="True" Content="Yaw"/>
+                        <CheckBox x:Name="throttleToggle" IsChecked="True" Content="Throttle"/>
+                    </StackPanel>
+                </ScrollViewer>
             </StackPanel>
         </PivotItem>
         <PivotItem Header="Control">

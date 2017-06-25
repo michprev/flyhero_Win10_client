@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
+using System.Text;
 using System.Threading.Tasks;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
@@ -47,13 +48,17 @@ namespace flyhero_client
         private DatagramSocket socket;
         private DataWriter dw;
         private ConcurrentQueue<MeasurementData> queue;
-        private ThreadPoolTimer timer; 
+        private ThreadPoolTimer timer;
+        private bool[] logEnabled = new bool[11];
 
         public MainPage()
         {
             this.InitializeComponent();
             this.socket = new DatagramSocket();
             this.queue = new ConcurrentQueue<MeasurementData>();
+
+            for (int i = 0; i < 11; i++)
+                logEnabled[i] = false;
         }
 
         protected async override void OnNavigatedTo(NavigationEventArgs e)
@@ -80,41 +85,70 @@ namespace flyhero_client
         private void Socket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
             DataReader dr = args.GetDataReader();
-            dr.ByteOrder = ByteOrder.BigEndian;
+            dr.ByteOrder = ByteOrder.LittleEndian;
 
+
+            double accelX, accelY, accelZ;
+            double gyroX, gyroY, gyroZ;
+            double temperature;
             double roll, pitch, yaw;
             int throttle;
-            int FL, BL, FR, BR;
-            double rollCorrection, pitchCorrection, yawCorrection;
 
-            roll = dr.ReadInt32() / 65536.0;
-            pitch = dr.ReadInt32() / 65536.0;
-            yaw = dr.ReadInt32() / 65536.0;
-            throttle = dr.ReadInt32();
+            accelX = accelY = accelZ = 0;
+            gyroX = gyroY = gyroZ = 0;
+            temperature = 0;
+            roll = pitch = yaw = 0;
+            throttle = 0;
 
-            if (throttle != 0)
-                throttle -= 1000;
-
-            rollCorrection = roll * this.RollKp / 100.0;
-            pitchCorrection = pitch * this.PitchKp / 100.0;
-            yawCorrection = yaw * this.YawKp / 100.0;
-
-            if (!this.yawInvert)
+            if (this.logEnabled[0])
             {
-                FL = (int)(throttle + rollCorrection + pitchCorrection + yawCorrection);
-                BL = (int)(throttle + rollCorrection - pitchCorrection - yawCorrection);
-                FR = (int)(throttle - rollCorrection + pitchCorrection - yawCorrection);
-                BR = (int)(throttle - rollCorrection - pitchCorrection + yawCorrection);
+                accelX = dr.ReadInt16() / Math.Pow(2, 15) * 2;
             }
-            else
+            if (this.logEnabled[1])
             {
-                FL = (int)(throttle + rollCorrection + pitchCorrection - yawCorrection);
-                BL = (int)(throttle + rollCorrection - pitchCorrection + yawCorrection);
-                FR = (int)(throttle - rollCorrection + pitchCorrection + yawCorrection);
-                BR = (int)(throttle - rollCorrection - pitchCorrection - yawCorrection);
+                accelY = dr.ReadInt16() / Math.Pow(2, 15) * 2;
+            }
+            if (this.logEnabled[2])
+            {
+                accelZ = dr.ReadInt16() / Math.Pow(2, 15) * 2;
+            }
+            if (this.logEnabled[3])
+            {
+                gyroX = dr.ReadInt16() / Math.Pow(2, 15) * 2000;
+            }
+            if (this.logEnabled[4])
+            {
+                gyroY = dr.ReadInt16() / Math.Pow(2, 15) * 2000;
+            }
+            if (this.logEnabled[5])
+            {
+                gyroZ = dr.ReadInt16() / Math.Pow(2, 15) * 2000;
+            }
+            if (this.logEnabled[6])
+            {
+                temperature = dr.ReadInt16() / 340.0 + 36.53;
+            }
+            if (this.logEnabled[7])
+            {
+                roll = dr.ReadInt32() / 65536.0;
+            }
+            if (this.logEnabled[8])
+            {
+                pitch = dr.ReadInt32() / 65536.0;
+            }
+            if (this.logEnabled[9])
+            {
+                yaw = dr.ReadInt32() / 65536.0;
+            }
+            if (this.logEnabled[10])
+            {
+                throttle = dr.ReadUInt16();
+
+                if (throttle != 0)
+                    throttle -= 1000;
             }
 
-            this.queue.Enqueue(new MeasurementData() { Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle, FL = FL, BL = BL, FR = FR, BR = BR });
+            this.queue.Enqueue(new MeasurementData() { AccelX = accelX, AccelY = accelY, AccelZ = accelZ, GyroX = gyroX, GyroY = gyroY, GyroZ = gyroZ, Temperature = temperature, Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle });
         }
 
         private void rollKp_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
@@ -174,10 +208,83 @@ namespace flyhero_client
 
         private async void calibrate_Click(object sender, RoutedEventArgs e)
         {
+            UInt16 logOptions = 0;
+            StringBuilder sb = new StringBuilder();
+
+            if (this.accelXToggle.IsChecked == true)
+            {
+                logOptions |= 0x400;
+                sb.Append("Accel_X;");
+                this.logEnabled[0] = true;
+            }
+            if (this.accelYToggle.IsChecked == true)
+            {
+                logOptions |= 0x200;
+                sb.Append("Accel_Y;");
+                this.logEnabled[1] = true;
+            }
+            if (this.accelZToggle.IsChecked == true)
+            {
+                logOptions |= 0x100;
+                sb.Append("Accel_Z;");
+                this.logEnabled[2] = true;
+            }
+            if (this.gyroXToggle.IsChecked == true)
+            {
+                logOptions |= 0x80;
+                sb.Append("Gyro_X;");
+                this.logEnabled[3] = true;
+            }
+            if (this.gyroYToggle.IsChecked == true)
+            {
+                logOptions |= 0x40;
+                sb.Append("Gyro_Y;");
+                this.logEnabled[4] = true;
+            }
+            if (this.gyroZToggle.IsChecked == true)
+            {
+                logOptions |= 0x20;
+                sb.Append("Gyro_Z;");
+                this.logEnabled[5] = true;
+            }
+            if (this.tempToggle.IsChecked == true)
+            {
+                logOptions |= 0x10;
+                sb.Append("Temperature;");
+                this.logEnabled[6] = true;
+            }
+            if (this.rollToggle.IsChecked == true)
+            {
+                logOptions |= 0x8;
+                sb.Append("Roll;");
+                this.logEnabled[7] = true;
+            }
+            if (this.pitchToggle.IsChecked == true)
+            {
+                logOptions |= 0x4;
+                sb.Append("Pitch;");
+                this.logEnabled[8] = true;
+            }
+            if (this.yawToggle.IsChecked == true)
+            {
+                logOptions |= 0x2;
+                sb.Append("Yaw;");
+                this.logEnabled[9] = true;
+            }
+            if (this.throttleToggle.IsChecked == true)
+            {
+                logOptions |= 0x1;
+                sb.Append("Throttle;");
+                this.logEnabled[10] = true;
+            }
+
+            sb.Append("Time\r\n");
+
+
             byte[] message = new byte[3];
             message[0] = 0x5D;
-            message[1] = (byte)(this.logData ? 0x01 : 0x00);
-            message[2] = 0x5D;
+            message[1] = (byte)(logOptions >> 8);
+            message[2] = (byte)(logOptions & 0xFF);
 
             try
             {
@@ -186,6 +293,7 @@ namespace flyhero_client
                 this.calibrateButton.IsEnabled = false;
                 this.logSwitch.IsEnabled = false;
                 this.startButton.IsEnabled = true;
+                this.logOptionsViewer.IsEnabled = false;
             }
             catch (Exception ex)
             {
@@ -205,7 +313,7 @@ namespace flyhero_client
                     {
                         using (var fileWriter = new DataWriter(outputStream))
                         {
-                            fileWriter.WriteString("Roll;Pitch;Yaw;Throttle;FL;BL;FR;BR;Time\r\n");
+                            fileWriter.WriteString(sb.ToString());
 
                             MeasurementData d;
                             int c = 0;
@@ -214,7 +322,56 @@ namespace flyhero_client
                             {
                                 if (this.queue.Count > 0 && this.queue.TryDequeue(out d))
                                 {
-                                    fileWriter.WriteString(String.Format("{0};{1};{2};{3};{4};{5};{6};{7};{8}\r\n", d.Roll, d.Pitch, d.Yaw, d.Throttle, d.FL, d.BL, d.FR, d.BR, c * 5).Replace(',', '.'));
+                                    sb.Clear();
+                                    if (this.logEnabled[0])
+                                    {
+                                        sb.Append(d.AccelX).Append(';');
+                                    }
+                                    if (this.logEnabled[1])
+                                    {
+                                        sb.Append(d.AccelY).Append(';');
+                                    }
+                                    if (this.logEnabled[2])
+                                    {
+                                        sb.Append(d.AccelZ).Append(';');
+                                    }
+                                    if (this.logEnabled[3])
+                                    {
+                                        sb.Append(d.GyroX).Append(';');
+                                    }
+                                    if (this.logEnabled[4])
+                                    {
+                                        sb.Append(d.GyroY).Append(';');
+                                    }
+                                    if (this.logEnabled[5])
+                                    {
+                                        sb.Append(d.GyroZ).Append(';');
+                                    }
+                                    if (this.logEnabled[6])
+                                    {
+                                        sb.Append(d.Temperature).Append(';');
+                                    }
+                                    if (this.logEnabled[7])
+                                    {
+                                        sb.Append(d.Roll).Append(';');
+                                    }
+                                    if (this.logEnabled[8])
+                                    {
+                                        sb.Append(d.Pitch).Append(';');
+                                    }
+                                    if (this.logEnabled[9])
+                                    {
+                                        sb.Append(d.Yaw).Append(';');
+                                    }
+                                    if (this.logEnabled[10])
+                                    {
+                                        sb.Append(d.Throttle).Append(';');
+                                    }
+
+                                    sb.Append(c * 5).Append("\r\n");
+
+
+                                    fileWriter.WriteString(sb.ToString().Replace(',', '.'));
                                     c++;
 
                                     if (c % 100 == 0)
