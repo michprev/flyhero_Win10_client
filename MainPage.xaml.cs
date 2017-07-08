@@ -85,70 +85,162 @@ namespace flyhero_client
         private void Socket_MessageReceived(DatagramSocket sender, DatagramSocketMessageReceivedEventArgs args)
         {
             DataReader dr = args.GetDataReader();
-            dr.ByteOrder = ByteOrder.LittleEndian;
+            dr.ByteOrder = ByteOrder.BigEndian;
 
+            uint length = dr.UnconsumedBufferLength;
 
-            double accelX, accelY, accelZ;
-            double gyroX, gyroY, gyroZ;
-            double temperature;
-            double roll, pitch, yaw;
-            int throttle;
+            // skip the very first 0x33 header byte
+            dr.ReadByte();
+            length--;
 
-            accelX = accelY = accelZ = 0;
-            gyroX = gyroY = gyroZ = 0;
-            temperature = 0;
-            roll = pitch = yaw = 0;
-            throttle = 0;
+            byte[] data = new byte[length];
+            dr.ReadBytes(data);
 
-            if (this.logEnabled[0])
-            {
-                accelX = dr.ReadInt16() / Math.Pow(2, 15) * 2;
-            }
-            if (this.logEnabled[1])
-            {
-                accelY = dr.ReadInt16() / Math.Pow(2, 15) * 2;
-            }
-            if (this.logEnabled[2])
-            {
-                accelZ = dr.ReadInt16() / Math.Pow(2, 15) * 2;
-            }
-            if (this.logEnabled[3])
-            {
-                gyroX = dr.ReadInt16() / Math.Pow(2, 15) * 2000;
-            }
-            if (this.logEnabled[4])
-            {
-                gyroY = dr.ReadInt16() / Math.Pow(2, 15) * 2000;
-            }
-            if (this.logEnabled[5])
-            {
-                gyroZ = dr.ReadInt16() / Math.Pow(2, 15) * 2000;
-            }
-            if (this.logEnabled[6])
-            {
-                temperature = dr.ReadInt16() / 340.0 + 36.53;
-            }
-            if (this.logEnabled[7])
-            {
-                roll = dr.ReadInt32() / 65536.0;
-            }
-            if (this.logEnabled[8])
-            {
-                pitch = dr.ReadInt32() / 65536.0;
-            }
-            if (this.logEnabled[9])
-            {
-                yaw = dr.ReadInt32() / 65536.0;
-            }
-            if (this.logEnabled[10])
-            {
-                throttle = dr.ReadUInt16();
+            byte crc = data[length - 1];
 
-                if (throttle != 0)
-                    throttle -= 1000;
-            }
+            byte localCrc = 0x00;
+            for (int i = 0; i < length - 1; i++)
+                localCrc ^= data[i];
 
-            this.queue.Enqueue(new MeasurementData() { AccelX = accelX, AccelY = accelY, AccelZ = accelZ, GyroX = gyroX, GyroY = gyroY, GyroZ = gyroZ, Temperature = temperature, Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle });
+            if (localCrc == crc)
+            {
+                double accelX, accelY, accelZ;
+                double gyroX, gyroY, gyroZ;
+                double temperature;
+                double roll, pitch, yaw;
+                int throttle;
+
+                accelX = accelY = accelZ = 0;
+                gyroX = gyroY = gyroZ = 0;
+                temperature = 0;
+                roll = pitch = yaw = 0;
+                throttle = 0;
+
+                int parsePos = 0;
+                double gDiv = Math.Pow(2, 15) / 2000; // +- 2000 deg/s FSR
+                double aDiv = Math.Pow(2, 15) / 16; // +- 16 g FSR
+
+                if (this.logEnabled[0])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    accelX = BitConverter.ToInt16(data, parsePos);
+                    accelX /= aDiv;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[1])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    accelY = BitConverter.ToInt16(data, parsePos);
+                    accelY /= aDiv;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[2])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    accelZ = BitConverter.ToInt16(data, parsePos);
+                    accelZ /= aDiv;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[3])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    gyroX = BitConverter.ToInt16(data, parsePos);
+                    gyroX /= gDiv;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[4])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    gyroY = BitConverter.ToInt16(data, parsePos);
+                    gyroY /= gDiv;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[5])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    gyroZ = BitConverter.ToInt16(data, parsePos);
+                    gyroZ /= gDiv;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[6])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    temperature = BitConverter.ToInt16(data, parsePos);
+                    temperature = temperature / 340 + 36.53;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[7])
+                {
+                    byte swap = data[parsePos + 3];
+                    data[parsePos + 3] = data[parsePos];
+                    data[parsePos] = swap;
+                    swap = data[parsePos + 2];
+                    data[parsePos + 2] = data[parsePos + 1];
+                    data[parsePos + 1] = swap;
+                    roll = BitConverter.ToSingle(data, parsePos);
+
+                    parsePos += 4;
+                }
+                if (this.logEnabled[8])
+                {
+                    byte swap = data[parsePos + 3];
+                    data[parsePos + 3] = data[parsePos];
+                    data[parsePos] = swap;
+                    swap = data[parsePos + 2];
+                    data[parsePos + 2] = data[parsePos + 1];
+                    data[parsePos + 1] = swap;
+                    pitch = BitConverter.ToSingle(data, parsePos);
+
+                    parsePos += 4;
+                }
+                if (this.logEnabled[9])
+                {
+                    byte swap = data[parsePos + 3];
+                    data[parsePos + 3] = data[parsePos];
+                    data[parsePos] = swap;
+                    swap = data[parsePos + 2];
+                    data[parsePos + 2] = data[parsePos + 1];
+                    data[parsePos + 1] = swap;
+                    yaw = BitConverter.ToSingle(data, parsePos);
+
+                    parsePos += 4;
+                }
+                if (this.logEnabled[10])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    throttle = BitConverter.ToUInt16(data, parsePos);
+
+                    if (throttle != 0)
+                        throttle -= 1000;
+
+                    parsePos += 2;
+                }
+
+                this.queue.Enqueue(new MeasurementData() { AccelX = accelX, AccelY = accelY, AccelZ = accelZ, GyroX = gyroX, GyroY = gyroY, GyroZ = gyroZ, Temperature = temperature, Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle });
+            }
         }
 
         private void rollKp_ValueChanged(object sender, RangeBaseValueChangedEventArgs e)
