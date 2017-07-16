@@ -19,5 +19,6 @@ namespace flyhero_client
         public double Pitch { get; set; }
         public double Yaw { get; set; }
         public int Throttle { get; set; }
+        public int DeltaT { get; set; }
     }
 }

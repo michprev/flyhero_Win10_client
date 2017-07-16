@@ -108,7 +108,7 @@ namespace flyhero_client
                 double gyroX, gyroY, gyroZ;
                 double temperature;
                 double roll, pitch, yaw;
-                int throttle;
+                int throttle, deltaT;
 
                 accelX = accelY = accelZ = 0;
                 gyroX = gyroY = gyroZ = 0;
@@ -239,7 +239,14 @@ namespace flyhero_client
                     parsePos += 2;
                 }
 
-                this.queue.Enqueue(new MeasurementData() { AccelX = accelX, AccelY = accelY, AccelZ = accelZ, GyroX = gyroX, GyroY = gyroY, GyroZ = gyroZ, Temperature = temperature, Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle });
+                byte tmpSwap = data[parsePos + 1];
+                data[parsePos + 1] = data[parsePos];
+                data[parsePos] = tmpSwap;
+                deltaT = BitConverter.ToUInt16(data, parsePos);
+
+                parsePos += 2;
+
+                this.queue.Enqueue(new MeasurementData() { AccelX = accelX, AccelY = accelY, AccelZ = accelZ, GyroX = gyroX, GyroY = gyroY, GyroZ = gyroZ, Temperature = temperature, Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle, DeltaT = deltaT });
             }
         }
 
@@ -412,6 +419,7 @@ namespace flyhero_client
 
                             MeasurementData d;
                             int c = 0;
+                            double time = 0;
 
                             while (true)
                             {
@@ -463,7 +471,9 @@ namespace flyhero_client
                                         sb.Append(d.Throttle).Append(';');
                                     }
 
-                                    sb.Append(c * 5).Append("\r\n");
+                                    time += d.DeltaT / 1000.0;
+
+                                    sb.Append(time).Append("\r\n");
 
 
                                     fileWriter.WriteString(sb.ToString().Replace(',', '.'));
