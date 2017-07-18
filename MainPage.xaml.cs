@@ -314,67 +314,67 @@ namespace flyhero_client
             {
                 if (this.accelXToggle.IsChecked == true)
                 {
-                    logOptions |= 0x400;
+                    logOptions |= (ushort)DataType.Accel_X;
                     sb.Append("Accel_X;");
                     this.logEnabled[0] = true;
                 }
                 if (this.accelYToggle.IsChecked == true)
                 {
-                    logOptions |= 0x200;
+                    logOptions |= (ushort)DataType.Accel_Y;
                     sb.Append("Accel_Y;");
                     this.logEnabled[1] = true;
                 }
                 if (this.accelZToggle.IsChecked == true)
                 {
-                    logOptions |= 0x100;
+                    logOptions |= (ushort)DataType.Accel_Z;
                     sb.Append("Accel_Z;");
                     this.logEnabled[2] = true;
                 }
                 if (this.gyroXToggle.IsChecked == true)
                 {
-                    logOptions |= 0x80;
+                    logOptions |= (ushort)DataType.Gyro_X;
                     sb.Append("Gyro_X;");
                     this.logEnabled[3] = true;
                 }
                 if (this.gyroYToggle.IsChecked == true)
                 {
-                    logOptions |= 0x40;
+                    logOptions |= (ushort)DataType.Gyro_Y;
                     sb.Append("Gyro_Y;");
                     this.logEnabled[4] = true;
                 }
                 if (this.gyroZToggle.IsChecked == true)
                 {
-                    logOptions |= 0x20;
+                    logOptions |= (ushort)DataType.Gyro_Z;
                     sb.Append("Gyro_Z;");
                     this.logEnabled[5] = true;
                 }
                 if (this.tempToggle.IsChecked == true)
                 {
-                    logOptions |= 0x10;
+                    logOptions |= (ushort)DataType.Temperature;
                     sb.Append("Temperature;");
                     this.logEnabled[6] = true;
                 }
                 if (this.rollToggle.IsChecked == true)
                 {
-                    logOptions |= 0x8;
+                    logOptions |= (ushort)DataType.Roll;
                     sb.Append("Roll;");
                     this.logEnabled[7] = true;
                 }
                 if (this.pitchToggle.IsChecked == true)
                 {
-                    logOptions |= 0x4;
+                    logOptions |= (ushort)DataType.Pitch;
                     sb.Append("Pitch;");
                     this.logEnabled[8] = true;
                 }
                 if (this.yawToggle.IsChecked == true)
                 {
-                    logOptions |= 0x2;
+                    logOptions |= (ushort)DataType.Yaw;
                     sb.Append("Yaw;");
                     this.logEnabled[9] = true;
                 }
                 if (this.throttleToggle.IsChecked == true)
                 {
-                    logOptions |= 0x1;
+                    logOptions |= (ushort)DataType.Throttle;
                     sb.Append("Throttle;");
                     this.logEnabled[10] = true;
                 }
