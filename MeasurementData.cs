@@ -20,5 +20,9 @@ namespace flyhero_client
         public double Yaw { get; set; }
         public int Throttle { get; set; }
         public int DeltaT { get; set; }
+        public int Motor_FL { get; set; }
+        public int Motor_FR { get; set; }
+        public int Motor_BL { get; set; }
+        public int Motor_BR { get; set; }
     }
 }

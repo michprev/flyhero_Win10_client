@@ -49,7 +49,7 @@ namespace flyhero_client
         private DataWriter dw;
         private ConcurrentQueue<MeasurementData> queue;
         private ThreadPoolTimer timer;
-        private bool[] logEnabled = new bool[11];
+        private bool[] logEnabled = new bool[16];
 
         public MainPage()
         {
@@ -109,12 +109,14 @@ namespace flyhero_client
                 double temperature;
                 double roll, pitch, yaw;
                 int throttle, deltaT;
+                int motor_FL, motor_FR, motor_BL, motor_BR;
 
                 accelX = accelY = accelZ = 0;
                 gyroX = gyroY = gyroZ = 0;
                 temperature = 0;
                 roll = pitch = yaw = 0;
                 throttle = 0;
+                motor_FL = motor_FR = motor_BL = motor_BR = 0;
 
                 int parsePos = 0;
                 double gDiv = Math.Pow(2, 15) / 2000; // +- 2000 deg/s FSR
@@ -238,6 +240,62 @@ namespace flyhero_client
 
                     parsePos += 2;
                 }
+                if (this.logEnabled[11])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    motor_FL = BitConverter.ToUInt16(data, parsePos);
+
+                    if (motor_FL == 940)
+                        motor_FL = 0;
+                    else
+                        motor_FL -= throttle + 1000;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[12])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    motor_FR = BitConverter.ToUInt16(data, parsePos);
+
+                    if (motor_FR == 940)
+                        motor_FR = 0;
+                    else
+                        motor_FR -= throttle + 1000;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[13])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    motor_BL = BitConverter.ToUInt16(data, parsePos);
+
+                    if (motor_BL == 940)
+                        motor_BL = 0;
+                    else
+                        motor_BL -= throttle + 1000;
+
+                    parsePos += 2;
+                }
+                if (this.logEnabled[14])
+                {
+                    byte swap = data[parsePos + 1];
+                    data[parsePos + 1] = data[parsePos];
+                    data[parsePos] = swap;
+                    motor_BR = BitConverter.ToUInt16(data, parsePos);
+
+                    if (motor_BR == 940)
+                        motor_BR = 0;
+                    else
+                        motor_BR -= throttle + 1000;
+
+                    parsePos += 2;
+                }
 
                 byte tmpSwap = data[parsePos + 1];
                 data[parsePos + 1] = data[parsePos];
@@ -246,7 +304,10 @@ namespace flyhero_client
 
                 parsePos += 2;
 
-                this.queue.Enqueue(new MeasurementData() { AccelX = accelX, AccelY = accelY, AccelZ = accelZ, GyroX = gyroX, GyroY = gyroY, GyroZ = gyroZ, Temperature = temperature, Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle, DeltaT = deltaT });
+                this.queue.Enqueue(new MeasurementData() { AccelX = accelX, AccelY = accelY, AccelZ = accelZ,
+                    GyroX = gyroX, GyroY = gyroY, GyroZ = gyroZ, Temperature = temperature,
+                    Roll = roll, Pitch = pitch, Yaw = yaw, Throttle = throttle,
+                    Motor_FL = motor_FL, Motor_FR = motor_FR, Motor_BL = motor_BL, Motor_BR = motor_BR, DeltaT = deltaT });
             }
         }
 
@@ -378,6 +439,30 @@ namespace flyhero_client
                     sb.Append("Throttle;");
                     this.logEnabled[10] = true;
                 }
+                if (this.FLToggle.IsChecked == true)
+                {
+                    logOptions |= (ushort)DataType.Motor_FL;
+                    sb.Append("FL;");
+                    this.logEnabled[11] = true;
+                }
+                if (this.FRToggle.IsChecked == true)
+                {
+                    logOptions |= (ushort)DataType.Motor_FR;
+                    sb.Append("FR;");
+                    this.logEnabled[12] = true;
+                }
+                if (this.BLToggle.IsChecked == true)
+                {
+                    logOptions |= (ushort)DataType.Motor_BL;
+                    sb.Append("BL;");
+                    this.logEnabled[13] = true;
+                }
+                if (this.BRToggle.IsChecked == true)
+                {
+                    logOptions |= (ushort)DataType.Motor_BR;
+                    sb.Append("BR;");
+                    this.logEnabled[14] = true;
+                }
             }
 
             sb.Append("Time\r\n");
@@ -469,6 +554,22 @@ namespace flyhero_client
                                     if (this.logEnabled[10])
                                     {
                                         sb.Append(d.Throttle).Append(';');
+                                    }
+                                    if (this.logEnabled[11])
+                                    {
+                                        sb.Append(d.Motor_FL).Append(';');
+                                    }
+                                    if (this.logEnabled[12])
+                                    {
+                                        sb.Append(d.Motor_FR).Append(';');
+                                    }
+                                    if (this.logEnabled[13])
+                                    {
+                                        sb.Append(d.Motor_BL).Append(';');
+                                    }
+                                    if (this.logEnabled[14])
+                                    {
+                                        sb.Append(d.Motor_BR).Append(';');
                                     }
 
                                     time += d.DeltaT / 1000.0;

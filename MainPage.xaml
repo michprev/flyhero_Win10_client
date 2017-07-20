@@ -9,18 +9,24 @@
 
     <Pivot Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
         <PivotItem Header="Start">
-            <StackPanel Margin="20,40,20,0" Orientation="Vertical">
+            <Grid Margin="20,40,20,0">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                
                 <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
                     <Button Margin="0,0,30,20" x:Name="calibrateButton" Click="calibrate_Click" HorizontalAlignment="Center" Width="100" Height="40" Content="Calibrate"/>
                     <Button Margin="30,0,0,20" x:Name="startButton" IsEnabled="False" Content="Start" HorizontalAlignment="Left" Height="40" Width="100" Click="start_Click"/>
                 </StackPanel>
-                <StackPanel HorizontalAlignment="Center" Orientation="Horizontal">
+                <StackPanel Grid.Row="1" HorizontalAlignment="Center" Orientation="Horizontal">
                     <TextBlock VerticalAlignment="Center" Text="Log data"/>
                     <ToggleSwitch x:Name="logSwitch" Margin="20,0,0,0" Toggled="log_data_Toggled"/>
                 </StackPanel>
 
-                <ScrollViewer x:Name="logOptionsViewer" IsEnabled="{x:Bind logSwitch.IsOn, Mode=OneWay}">
-                    <StackPanel Orientation="Vertical">
+                <ScrollViewer Grid.Row="2" x:Name="logOptionsViewer" IsEnabled="{x:Bind logSwitch.IsOn, Mode=OneWay}">
+                    <ItemsControl>
                         <CheckBox x:Name="accelXToggle" IsChecked="True" Content="Accel X"/>
                         <CheckBox x:Name="accelYToggle" IsChecked="True" Content="Accel Y"/>
                         <CheckBox x:Name="accelZToggle" IsChecked="True" Content="Accel Z"/>
@@ -32,9 +38,13 @@
                         <CheckBox x:Name="pitchToggle" IsChecked="True" Content="Pitch"/>
                         <CheckBox x:Name="yawToggle" IsChecked="True" Content="Yaw"/>
                         <CheckBox x:Name="throttleToggle" IsChecked="True" Content="Throttle"/>
-                    </StackPanel>
+                        <CheckBox x:Name="FLToggle" IsChecked="True" Content="Motor FL"/>
+                        <CheckBox x:Name="FRToggle" IsChecked="True" Content="Motor FR"/>
+                        <CheckBox x:Name="BLToggle" IsChecked="True" Content="Motor BL"/>
+                        <CheckBox x:Name="BRToggle" IsChecked="True" Content="Motor BR"/>
+                    </ItemsControl>
                 </ScrollViewer>
-            </StackPanel>
+            </Grid>
         </PivotItem>
         <PivotItem Header="Control">
             <StackPanel Margin="0,0,0,0" Orientation="Vertical">
